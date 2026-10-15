@@ -1,9 +1,11 @@
 package ytstudio.whac_a_mole_tool.service
 
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
+import android.os.IBinder
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.compose.foundation.background
@@ -21,8 +23,16 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
+import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 
 /**
@@ -33,12 +43,20 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
  * 2. 快捷操作：启动/暂停/配置 自动点击工具
  * 3. 采用 Jetpack Compose 渲染现代化悬浮胶囊与控制小面板
  */
-class FloatingOverlayService : LifecycleService() {
+class FloatingOverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
 
     companion object {
         var isOverlayShowing = false
             private set
     }
+
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    private val savedStateRegistryController = SavedStateRegistryController.create(this)
+    private val store = ViewModelStore()
+
+    override val lifecycle: Lifecycle get() = lifecycleRegistry
+    override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
+    override val viewModelStore: ViewModelStore get() = store
 
     private lateinit var windowManager: WindowManager
     private lateinit var overlayParams: WindowManager.LayoutParams
@@ -49,6 +67,11 @@ class FloatingOverlayService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
+        savedStateRegistryController.performRestore(null)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         setupFloatingWindow()
         isOverlayShowing = true
@@ -77,6 +100,7 @@ class FloatingOverlayService : LifecycleService() {
         composeView = ComposeView(this).apply {
             setViewTreeLifecycleOwner(this@FloatingOverlayService)
             setViewTreeSavedStateRegistryOwner(this@FloatingOverlayService)
+            setViewTreeViewModelStoreOwner(this@FloatingOverlayService)
             setContent {
                 FloatingPillContent(
                     isBotActive = isBotActive,
@@ -106,7 +130,13 @@ class FloatingOverlayService : LifecycleService() {
         if (::composeView.isInitialized) {
             windowManager.removeView(composeView)
         }
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        store.clear()
     }
+
+    override fun onBind(intent: Intent?): IBinder? = null
 }
 
 @Composable
@@ -133,7 +163,7 @@ fun FloatingPillContent(
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 胶囊主栏
             Row(
