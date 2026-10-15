@@ -36,11 +36,13 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: 配置 Android SDK 环境
-        uses: android-actions/setup-android@v3
-
       - name: 赋予 gradlew 可执行权限
         run: chmod +x ./gradlew
+
+      - name: 接受 Android SDK 协议 (Accept SDK Licenses)
+        run: |
+          ANDROID_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          yes | "$ANDROID_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
 
       - name: 执行 Gradle 编译 (${{ inputs.build_type }})
         run: |
