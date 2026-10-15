@@ -150,6 +150,17 @@ export const AndroidComposeSimulator: React.FC<AndroidComposeSimulatorProps> = (
               根据系统需求规格说明书，本 app 免 Root 运行，无需联网权限（禁止 INTERNET）。运行前请确保以下两大核心服务已就绪：
             </div>
 
+            {/* Android 13/14+ 受限设置特别提示条 */}
+            <div className="bg-blue-950/40 border border-blue-500/40 rounded-2xl p-3 text-xs space-y-2">
+              <div className="flex items-center gap-2 text-blue-300 font-bold">
+                <span>💡 安卓 13/14/15 或国产系统（小米/华为/OPPO/VIVO）提示：</span>
+              </div>
+              <p className="text-slate-300 leading-relaxed text-[11px]">
+                1. 若在真机上开启无障碍时提示「受限制的设置」或开关置灰：请进入手机【设置】→【应用管理】→【打地鼠辅助工具】→ 点击右上角三点菜单选择【允许受限制的设置】后再次开启。<br/>
+                2. 若您已经在系统设置中打开，但系统检测存在延迟或沙盒阻隔，可直接开启卡片内的「强制通过/手动就绪」开关直接激活！
+              </p>
+            </div>
+
             {/* 1. 桌面悬浮窗权限卡片 */}
             <div
               className={`rounded-2xl p-4 border transition-all ${
@@ -182,11 +193,11 @@ export const AndroidComposeSimulator: React.FC<AndroidComposeSimulatorProps> = (
                 >
                   {settings.overlayPermissionGranted ? (
                     <>
-                      <CheckCircle2 className="w-3 h-3" /> 已授权
+                      <CheckCircle2 className="w-3 h-3" /> 已就绪
                     </>
                   ) : (
                     <>
-                      <XCircle className="w-3 h-3" /> 未授予
+                      <XCircle className="w-3 h-3" /> 未配置
                     </>
                   )}
                 </span>
@@ -195,6 +206,26 @@ export const AndroidComposeSimulator: React.FC<AndroidComposeSimulatorProps> = (
               <p className="text-xs text-slate-300 mb-3">
                 允许本工具在系统桌面及打地鼠游戏窗口上层悬浮显示控制胶囊，支持任意拖拽贴边、启动、暂停与快速配置。
               </p>
+
+              {/* 手动覆盖开关 */}
+              <div className="mb-3 p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between text-xs">
+                <div>
+                  <div className="font-semibold text-slate-200">系统已开启但未识别？</div>
+                  <div className="text-[10px] text-slate-400">勾选手动就绪，绕过厂商 ROM 检测延迟</div>
+                </div>
+                <button
+                  onClick={() => setSettings((s) => ({ ...s, overlayPermissionGranted: !s.overlayPermissionGranted }))}
+                  className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 ${
+                    settings.overlayPermissionGranted ? 'bg-emerald-500' : 'bg-slate-700'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                      settings.overlayPermissionGranted ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
 
               <div className="flex gap-2">
                 <button
@@ -206,7 +237,7 @@ export const AndroidComposeSimulator: React.FC<AndroidComposeSimulatorProps> = (
                   }`}
                 >
                   <ExternalLink className="w-3 h-3" />
-                  {settings.overlayPermissionGranted ? '权限已正常 (点击重新配置)' : '进入配置界面授权'}
+                  {settings.overlayPermissionGranted ? '权限已正常 (点击重新配置)' : '前往系统授权'}
                 </button>
               </div>
             </div>
@@ -257,6 +288,26 @@ export const AndroidComposeSimulator: React.FC<AndroidComposeSimulatorProps> = (
                 基于 Android 无障碍手势派发（dispatchGesture）进行物理级 20ms 极速触摸模拟。具备 280ms 单洞防抖与 75ms 破防双连击。
               </p>
 
+              {/* 手动覆盖开关 */}
+              <div className="mb-3 p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between text-xs">
+                <div>
+                  <div className="font-semibold text-slate-200">系统已开启但未识别？</div>
+                  <div className="text-[10px] text-slate-400">勾选手动就绪，立即启用无障碍点击通道</div>
+                </div>
+                <button
+                  onClick={() => setSettings((s) => ({ ...s, accessibilityGranted: !s.accessibilityGranted }))}
+                  className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 ${
+                    settings.accessibilityGranted ? 'bg-emerald-500' : 'bg-slate-700'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                      settings.accessibilityGranted ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
               <div className="flex gap-2">
                 <button
                   onClick={handleGrantAccessibility}
@@ -267,7 +318,7 @@ export const AndroidComposeSimulator: React.FC<AndroidComposeSimulatorProps> = (
                   }`}
                 >
                   <ExternalLink className="w-3 h-3" />
-                  {settings.accessibilityGranted ? '服务正常运行 (点击重新配置)' : '进入配置界面开启服务'}
+                  {settings.accessibilityGranted ? '服务正常运行 (点击重新配置)' : '前往系统开启服务'}
                 </button>
               </div>
             </div>

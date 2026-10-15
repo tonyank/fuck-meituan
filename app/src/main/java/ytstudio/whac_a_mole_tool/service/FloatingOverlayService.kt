@@ -121,7 +121,11 @@ class FloatingOverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, S
             }
         }
 
-        windowManager.addView(composeView, overlayParams)
+        try {
+            windowManager.addView(composeView, overlayParams)
+        } catch (e: Exception) {
+            android.util.Log.e("FloatingOverlayService", "悬浮窗挂载失败: ${e.message}", e)
+        }
     }
 
     override fun onDestroy() {

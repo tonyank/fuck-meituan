@@ -71,7 +71,19 @@ class AutoClickAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
-        Log.i(TAG, "打地鼠无障碍辅助点击服务已连接绑定")
+        try {
+            val info = serviceInfo ?: android.accessibilityservice.AccessibilityServiceInfo()
+            info.apply {
+                eventTypes = AccessibilityEvent.TYPES_ALL_MASK
+                feedbackType = android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC
+                notificationTimeout = 100
+                flags = flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_DEFAULT
+            }
+            serviceInfo = info
+        } catch (e: Exception) {
+            Log.w(TAG, "配置 serviceInfo 异常: ${e.message}")
+        }
+        Log.i(TAG, "打地鼠无障碍辅助点击服务已连接绑定成功")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
