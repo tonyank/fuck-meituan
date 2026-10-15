@@ -9,6 +9,142 @@ export interface AndroidFile {
 
 export const ANDROID_SOURCE_FILES: AndroidFile[] = [
   {
+    path: '.github/workflows/build-android-apk.yml',
+    name: 'build-android-apk.yml (CI/CD)',
+    language: 'yaml',
+    category: 'script',
+    description: 'GitHub Actions 手动触发工作流：自动配置 JDK 17、执行编译、zipalign 与生产级签名打包 APK',
+    content: `name: Build Signed Android APK (构建已签名安卓APK)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: '构建模式 (Build Type)'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+      create_github_release:
+        description: '是否自动创建 GitHub Release 发布草稿'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: 编译与签名 APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码仓库 (Checkout Repository)
+        uses: actions/checkout@v4
+
+      - name: 配置 JDK 17 (Setup Java JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: 配置 Android SDK 环境
+        uses: android-actions/setup-android@v3
+
+      - name: 赋予 gradlew 可执行权限
+        run: chmod +x ./gradlew
+
+      - name: 执行 Gradle 编译 (\${{ inputs.build_type }})
+        run: |
+          if [ "\${{ inputs.build_type }}" = "release" ]; then
+            ./gradlew assembleRelease --stacktrace
+          else
+            ./gradlew assembleDebug --stacktrace
+          fi
+
+      - name: 准备并签名 APK (Sign APK with Keystore)
+        id: sign_apk
+        run: |
+          BUILD_TYPE="\${{ inputs.build_type }}"
+          if [ "$BUILD_TYPE" = "release" ]; then
+            RAW_APK=\$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          else
+            RAW_APK=\$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          fi
+          
+          if [ -z "$RAW_APK" ]; then
+            echo "::error::未找到编译生成的 APK 文件！"
+            exit 1
+          fi
+          
+          BUILD_TOOLS_PATH=\$(find \$ANDROID_HOME/build-tools -name "apksigner" | sort -V | tail -n 1 | xargs dirname)
+          ZIPALIGN="\$BUILD_TOOLS_PATH/zipalign"
+          APKSIGNER="\$BUILD_TOOLS_PATH/apksigner"
+          
+          TIMESTAMP=\$(date +'%Y%m%d_%H%M%S')
+          OUTPUT_APK="ytstudio-whac-a-mole-tool-\${BUILD_TYPE}-signed-\${TIMESTAMP}.apk"
+          ALIGNED_APK="app-aligned-temp.apk"
+          
+          \$ZIPALIGN -v -p 4 "\$RAW_APK" "\$ALIGNED_APK"
+          
+          if [ -n "\${{ secrets.KEYSTORE_BASE64 }}" ] && [ -n "\${{ secrets.KEY_ALIAS }}" ]; then
+            echo "使用自定义 GitHub Secrets 密钥库签名..."
+            echo "\${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.jks
+            \$APKSIGNER sign \\
+              --ks release.jks \\
+              --ks-pass "pass:\${{ secrets.KEYSTORE_PASSWORD }}" \\
+              --ks-key-alias "\${{ secrets.KEY_ALIAS }}" \\
+              --key-pass "pass:\${{ secrets.KEY_PASSWORD }}" \\
+              --v1-signing-enabled true \\
+              --v2-signing-enabled true \\
+              --v3-signing-enabled true \\
+              --out "\$OUTPUT_APK" \\
+              "\$ALIGNED_APK"
+          else
+            echo "自动生成独立生产级密钥库签名..."
+            KEYSTORE_PASS="ytstudio_whac_mole_2026"
+            KEY_ALIAS="whac_a_mole_tool"
+            keytool -genkey -v \\
+              -keystore auto_release.jks \\
+              -alias "\$KEY_ALIAS" \\
+              -keyalg RSA \\
+              -keysize 2048 \\
+              -validity 10000 \\
+              -storepass "\$KEYSTORE_PASS" \\
+              -keypass "\$KEYSTORE_PASS" \\
+              -dname "CN=ytstudio, OU=Mobile, O=YTStudio, L=Beijing, ST=Beijing, C=CN"
+            
+            \$APKSIGNER sign \\
+              --ks auto_release.jks \\
+              --ks-pass "pass:\$KEYSTORE_PASS" \\
+              --ks-key-alias "\$KEY_ALIAS" \\
+              --key-pass "pass:\$KEYSTORE_PASS" \\
+              --v1-signing-enabled true \\
+              --v2-signing-enabled true \\
+              --v3-signing-enabled true \\
+              --out "\$OUTPUT_APK" \\
+              "\$ALIGNED_APK"
+          fi
+          
+          \$APKSIGNER verify --verbose "\$OUTPUT_APK"
+          sha256sum "\$OUTPUT_APK" > "\${OUTPUT_APK}.sha256"
+          echo "apk_path=\$OUTPUT_APK" >> \$GITHUB_OUTPUT
+          echo "apk_name=\$OUTPUT_APK" >> \$GITHUB_OUTPUT
+
+      - name: 上传已签名 APK 为构建产物 (Upload Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: \${{ steps.sign_apk.outputs.apk_name }}
+          path: |
+            \${{ steps.sign_apk.outputs.apk_path }}
+            \${{ steps.sign_apk.outputs.apk_path }}.sha256
+          retention-days: 30`,
+  },
+  {
     path: 'build.gradle.kts',
     name: 'build.gradle.kts (根项目)',
     language: 'kotlin',
