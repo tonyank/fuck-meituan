@@ -1,0 +1,12 @@
+<svg viewBox="0 0 140 160" width="140" height="160" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="70" cy="142" rx="58" ry="16" fill="#9C6B30" />
+  <path d="M74 46 C74 30 92 36 96 22 C98 16 95 12 104 10" stroke="#D7B576" stroke-width="7" fill="none" stroke-linecap="round" />
+  <circle cx="106" cy="8" r="6" fill="#FF5722" />
+  <circle cx="71" cy="90" r="44" fill="#4B6584" />
+  <circle cx="71" cy="90" r="40" fill="#577A9C" />
+  <ellipse cx="66" cy="88" rx="12" ry="10" fill="#FFD53D" />
+  <circle cx="62" cy="86" r="3" fill="#3D5066" />
+  <circle cx="70" cy="86" r="3" fill="#3D5066" />
+  <rect x="25" y="122" width="90" height="18" rx="9" fill="#B71C1C" />
+  <text x="70" y="135" text-anchor="middle" fill="#FFFFFF" font-size="10" font-weight="bold">BOMB</text>
+</svg>

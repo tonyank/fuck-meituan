@@ -1,0 +1,6 @@
+{
+  "name": "打地鼠辅助工具 - Whac-A-Mole Tool",
+  "description": "基于 Kotlin + Jetpack Compose + OpenCV + Accessibility Service 的免 Root 原生打地鼠自动识别与辅助点击工具及全功能交互式工作台。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

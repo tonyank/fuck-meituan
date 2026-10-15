@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">打地鼠辅助工具</string>
+    <string name="app_name_en">Whac-A-Mole tool</string>
+    <string name="accessibility_service_desc">打地鼠辅助工具 - 免Root智能屏幕自动点击服务</string>
+    <string name="overlay_permission_title">桌面悬浮窗权限</string>
+    <string name="overlay_permission_desc">用于在打地鼠游戏上层显示可拖动、控制启停的辅助悬浮窗</string>
+    <string name="accessibility_title">无障碍自动点击服务</string>
+    <string name="accessibility_desc">用于物理模拟屏幕点击，20ms极速分发，避雷防炸，自动双击破防</string>
+</resources>
